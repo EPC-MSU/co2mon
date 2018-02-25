@@ -21,10 +21,10 @@ Install co2mon:
 ### From sources
 
     # macOS
-    brew install pkg-config hidapi libmicrohttpd
+    brew install pkg-config hidapi libmicrohttpd10
 
     # Ubuntu
-    apt-get install g++ pkg-config libhidapi-dev libmicrohttpd
+    apt-get install g++ pkg-config libhidapi-dev libmicrohttpd10
 
     make
     ./bin/co2mond
