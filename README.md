@@ -21,16 +21,13 @@ Install co2mon:
 ### From sources
 
     # macOS
-    brew install cmake pkg-config hidapi
+    brew install pkg-config hidapi libmicrohttpd
 
     # Ubuntu
-    apt-get install cmake g++ pkg-config libhidapi-dev
+    apt-get install g++ pkg-config libhidapi-dev libmicrohttpd
 
-    mkdir build
-    cd build
-    cmake ..
     make
-    ./co2mond/co2mond
+    ./bin/co2mond
 
 ## See also
 
