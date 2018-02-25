@@ -13,7 +13,7 @@
  * <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
-#include "include/ringbuf.h"
+#include "../include/ringbuf.h"
 
 #include <stdint.h>
 #include <stdlib.h>

@@ -1,6 +1,6 @@
-#include "include/platform.h"
-#include "include/ringbuf.h"
-#include "include/server.h"
+#include "../../microhttpd/include/platform.h"
+#include "../../ringbuf/include/ringbuf.h"
+#include "../include/server.h"
 
 #include <microhttpd.h>
 #include <stdio.h>

@@ -18,7 +18,7 @@
 #ifndef CO2MON_H_INCLUDED_
 #define CO2MON_H_INCLUDED_
 
-#include <hidapi.h>
+#include <hidapi/hidapi.h>
 
 typedef hid_device *co2mon_device;
 

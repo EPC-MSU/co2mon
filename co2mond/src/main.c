@@ -26,8 +26,11 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <microhttpd.h>
+#include <math.h>
 
-#include "co2mon.h"
+#include "../include/co2mon.h"
+#include "../include/server.h"
 
 #define CODE_TAMB 0x42 /* Ambient Temperature */
 #define CODE_CNTR 0x50 /* Relative Concentration of CO2 */
@@ -37,6 +40,7 @@
 
 int daemonize = 0;
 int print_unknown = 0;
+int httpserver = 0;
 char *datadir;
 
 uint16_t co2mon_data[256];
@@ -164,11 +168,13 @@ device_loop(co2mon_device dev)
 
         char buf[VALUE_MAX];
         uint16_t w = (result[1] << 8) + result[2];
+        static double temperature = NAN;
 
         switch (r0)
         {
         case CODE_TAMB:
-            snprintf(buf, VALUE_MAX, "%.4f", decode_temperature(w));
+            temperature = decode_temperature(w); // Save for web server
+            snprintf(buf, VALUE_MAX, "%.4f", temperature);
 
             if (!daemonize)
             {
@@ -207,7 +213,12 @@ device_loop(co2mon_device dev)
                     co2mon_data[r0] = w;
                 }
             }
-
+            
+            if (httpserver && !isnan(temperature))
+            {
+				server_feed((int)w, temperature);
+			}
+            
             write_heartbeat();
 
             break;
@@ -253,11 +264,13 @@ int main(int argc, char *argv[])
     char *reldatadir = 0;
     char *pidfile = 0;
     char *logfile = 0;
-
+    char *portnumber = 0;
+    char *bufsizestring = 0;
+    
     int c;
     int opterr = 0;
     int show_help = 0;
-    while ((c = getopt(argc, argv, ":dhuD:l:p:")) != -1)
+    while ((c = getopt(argc, argv, ":dhuD:l:p:P:b:")) != -1)
     {
         switch (c)
         {
@@ -279,6 +292,12 @@ int main(int argc, char *argv[])
         case 'p':
             pidfile = optarg;
             break;
+        case 'P':
+			portnumber = optarg;
+			break;
+		case 'b':
+			bufsizestring = optarg;
+			break;
         case ':':
             fprintf(stderr, "Option -%c requires an operand\n", optopt);
             opterr++;
@@ -290,7 +309,7 @@ int main(int argc, char *argv[])
     }
     if (show_help || opterr || optind != argc)
     {
-        fprintf(stderr, "usage: co2mond [-dhu] [-D datadir] [-p pidfle] [-l logfile]\n");
+        fprintf(stderr, "usage: co2mond [-dhu] [-D datadir] [-p pidfle] [-P port] [-l logfile]\n");
         if (show_help)
         {
             fprintf(stderr, "\n");
@@ -299,6 +318,10 @@ int main(int argc, char *argv[])
             fprintf(stderr, "  -u    print values for unknown items\n");
             fprintf(stderr, "  -D datadir\n");
             fprintf(stderr, "        store values from the sensor in datadir\n");
+            fprintf(stderr, "  -P port\n");
+            fprintf(stderr, "        start http server and listen to the specified port\n");
+            fprintf(stderr, "  -b bufsize\n");
+            fprintf(stderr, "        bufferize bufsize number of points for web server. Valid with -P option only. Max value is 65536.\n");
             fprintf(stderr, "  -p pidfile\n");
             fprintf(stderr, "        write PID to a file named pidfile\n");
             fprintf(stderr, "  -l logfile\n");
@@ -307,10 +330,26 @@ int main(int argc, char *argv[])
         }
         exit(1);
     }
-    if (daemonize && !reldatadir)
+    if (daemonize && !(reldatadir || portnumber))
     {
-        fprintf(stderr, "co2mond: it is useless to use -d without -D.\n");
+        fprintf(stderr, "co2mond: it is useless to use -d without -D or -P.\n");
         exit(1);
+    }
+    
+    long int bufsize = 2000;
+    if (bufsizestring)
+    {
+        if (!portnumber)
+        {
+			fprintf(stderr, "co2mond: it is useless to use -b without -P.\n");
+			exit(1);
+		}
+        bufsize = strtol(bufsizestring, NULL, 0);
+        if (bufsize <= 0L || bufsize > 65535)
+        {
+            fprintf(stderr, "co2mond: bufsize is out of bounds.\n");
+            exit(1);
+		}      
     }
 
     if (reldatadir)
@@ -333,7 +372,20 @@ int main(int argc, char *argv[])
             exit(1);
         }
     }
-
+    
+    long int port = 0;
+    if (portnumber)
+    {
+        port = strtol(portnumber, NULL, 0);
+        if (port <= 0L || port >= 65535)
+        {
+			perror(portnumber);
+            exit(1);
+		}      
+		server_init(port, bufsize);
+		httpserver = 1;
+    }
+    
     int logfd = -1;
     if (logfile)
     {
@@ -373,12 +425,15 @@ int main(int argc, char *argv[])
     int r = co2mon_init();
     if (r < 0)
     {
+        fprintf(stderr, "co2mond: Can't initialize co2 sensor.\n");
         return r;
     }
-
+    
     main_loop();
 
     co2mon_exit();
+    
+    server_exit();
 
     if (datadir)
     {

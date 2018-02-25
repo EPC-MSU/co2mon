@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "co2mon.h"
+#include "../include/co2mon.h"
 
 int
 co2mon_init()
