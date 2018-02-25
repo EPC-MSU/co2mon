@@ -2,7 +2,8 @@ CC=gcc
 CFLAGS=-std=c99
 
 all: co2mon.o main.o server.o ringbuf.o
-	$(CC) -o monitor co2mon.o main.o server.o ringbuf.o -Wl,-rpath=/usr/local/lib -L /usr/local/lib -lhidapi-hidraw -lmicrohttpd
+	mkdir bin
+	$(CC) -o bin/co2mond co2mon.o main.o server.o ringbuf.o -Wl,-rpath=/usr/local/lib -L /usr/local/lib -lhidapi-hidraw -lmicrohttpd
 
 main.o: co2mond/src/main.c
 	$(CC) -c -o main.o co2mond/src/main.c $(CFLAGS)
@@ -18,3 +19,4 @@ co2mon.o: libco2mon/src/co2mon.c
 
 clean:
 	rm -f ./*.o
+	rm -R bin
