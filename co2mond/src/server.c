@@ -7,21 +7,26 @@
 #include <stdlib.h>
 
 typedef struct {
-	char *head;
-	char *body_start;
-	char *js_payload;
-	char *body_end;
-} html_response;
-
-typedef struct {
 	int value;
 	double temp;
 	time_t time;
 } data_structure;
 
-static html_response resp;
 struct MHD_Daemon *d;
 ringbuf_t rbuf = NULL;
+
+static char *response = NULL;
+static size_t growoffset;
+static void grow_init(char* dst)
+{
+	*dst = 0;
+	growoffset = 0;
+}
+static void grow(char* dst, const char* src)
+{
+	strcat(dst + growoffset, src);
+	growoffset += strlen(src);
+}
 
 static int
 ahc_echo (void *cls,
@@ -32,7 +37,7 @@ ahc_echo (void *cls,
 	const char *upload_data, size_t *upload_data_size, void **ptr)
 {
 	static int aptr;
-	html_response *resp = cls;
+	char *resp = cls;
 	
 	size_t bytestocopy = ringbuf_bytes_used(rbuf);
 	if( bytestocopy % sizeof(data_structure) )
@@ -42,61 +47,61 @@ ahc_echo (void *cls,
 	}
 	data_structure *datacopy = malloc(bytestocopy);
 	ringbuf_memcpy_peek(datacopy, rbuf, bytestocopy);
-	*(resp->js_payload) = 0;
+	grow_init(resp);
+	
+	grow(resp, "<head><!-- Plotly.js --><script src='https://cdn.plot.ly/plotly-latest.min.js'></script></head>");
+	grow(resp, "<body><!-- Plotly chart will be drawn inside this DIV --><div id='myDiv' style='width:100%;height:100%'></div><script>");
+	
 	char strbuf[40];
 	// Trace 1
-	strcat(resp->js_payload, "\nvar trace1 = {\nx: ['");
+	grow(resp, "\nvar trace1 = {\nx: ['");
 	for ( int i = 0; i < bytestocopy / sizeof(data_structure); i++ )
 	{
 		strftime (strbuf, 40, "%F %T", localtime(&datacopy[i].time) );
-		strcat(resp->js_payload, strbuf);
+		grow(resp, strbuf);
 		if(i != bytestocopy / sizeof(data_structure) - 1) // Except last time
 		{
-			strcat(resp->js_payload, "', '");
+			grow(resp, "', '");
 		}
 	}
-	strcat(resp->js_payload, "'],\ny: [");
+	grow(resp, "'],\ny: [");
 	for ( int i = 0; i < bytestocopy / sizeof(data_structure); i++ )
 	{
 		sprintf(strbuf, "%i", datacopy[i].value);
-		strcat(resp->js_payload, strbuf);
+		grow(resp, strbuf);
 		if(i != bytestocopy / sizeof(data_structure) - 1) // Except last time
 		{
-			strcat(resp->js_payload, ", ");
+			grow(resp, ", ");
 		}
 	}
-	strcat(resp->js_payload, "],\nname: 'CO2 ppm',\ntype: 'scatter'\n};\n");
+	grow(resp, "],\nname: 'CO2 ppm',\ntype: 'scatter'\n};\n");
 	// Trace 2
-	strcat(resp->js_payload, "var trace2 = {\nx: ['");
+	grow(resp, "var trace2 = {\nx: ['");
 	for ( int i = 0; i < bytestocopy / sizeof(data_structure); i++ )
 	{
 		strftime (strbuf, 40, "%F %T", localtime(&datacopy[i].time) );
-		strcat(resp->js_payload, strbuf);
+		grow(resp, strbuf);
 		if(i != bytestocopy / sizeof(data_structure) - 1) // Except last time
 		{
-			strcat(resp->js_payload, "', '");
+			grow(resp, "', '");
 		}
 	}
-	strcat(resp->js_payload, "'],\ny: [");
+	grow(resp, "'],\ny: [");
 	for ( int i = 0; i < bytestocopy / sizeof(data_structure); i++ )
 	{
 		sprintf(strbuf, "%f", datacopy[i].temp);
-		strcat(resp->js_payload, strbuf);
+		grow(resp, strbuf);
 		if(i != bytestocopy / sizeof(data_structure) - 1) // Except last time
 		{
-			strcat(resp->js_payload, ", ");
+			grow(resp, ", ");
 		}
 	}
-	strcat(resp->js_payload, "],\nname: 'Temperature',\nyaxis: 'y2',\ntype: 'scatter'\n};\n");
+	grow(resp, "],\nname: 'Temperature',\nyaxis: 'y2',\ntype: 'scatter'\n};\n");
 	
-	strcat(resp->js_payload, "var data = [trace1, trace2]; var layout = {title: 'CO2 monitor',yaxis: {title: 'CO2 ppm'},yaxis2: {title: 'Temperature',titlefont: {color: 'rgb(148, 103, 189)'},tickfont: {color: 'rgb(148, 103, 189)'},overlaying: 'y',side: 'right'}}; Plotly.newPlot('myDiv', data, layout);");
+	grow(resp, "var data = [trace1, trace2]; var layout = {title: 'CO2 monitor',yaxis: {title: 'CO2 ppm'},yaxis2: {title: 'Temperature',titlefont: {color: 'rgb(148, 103, 189)'},tickfont: {color: 'rgb(148, 103, 189)'},overlaying: 'y',side: 'right'}}; Plotly.newPlot('myDiv', data, layout);");
 	
-	int bufsize = strlen(resp->head) + strlen(resp->body_start) + strlen(resp->js_payload) + strlen(resp->body_end);
-	char *me = malloc(bufsize+1); // memory must be freed by MHD by use of MHD_RESPMEM_MUST_FREE
-	strcpy(me, resp->head);
-	strcat(me, resp->body_start);
-	strcat(me, resp->js_payload);
-	strcat(me, resp->body_end);
+	grow(resp, "</script></body>");
+	
 	free(datacopy);
 	
 	struct MHD_Response *response;
@@ -111,9 +116,9 @@ ahc_echo (void *cls,
       return MHD_YES;
     }
   *ptr = NULL;                  /* reset when done */
-  response = MHD_create_response_from_buffer (strlen (me),
-					      (void *) me,
-					      MHD_RESPMEM_MUST_FREE);
+  response = MHD_create_response_from_buffer (strlen (resp),
+					      (void *) resp,
+					      MHD_RESPMEM_PERSISTENT);
   ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
   MHD_destroy_response (response);
   return ret;
@@ -135,17 +140,14 @@ int server_feed (int nval, double temp)
 
 int server_init(long int port, int bufcount)
 {
-	resp.head = "<head><!-- Plotly.js --><script src='https://cdn.plot.ly/plotly-latest.min.js'></script></head>";
-	resp.body_start = "<body><!-- Plotly chart will be drawn inside this DIV --><div id='myDiv' style='width:100%;height:100%'></div><script>";
-	resp.body_end = "</script></body>";
-	resp.js_payload = malloc(bufcount * 80 + 1024); // Predicted maximum payload string size with static and dynamic part
+	response = malloc(bufcount * 80 + 1024); // Predicted maximum response string size with static and dynamic part
 	
 	rbuf = ringbuf_new(sizeof(data_structure) * bufcount);
 
 	d = MHD_start_daemon (// MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG | MHD_USE_POLL,
 			MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG,
                         port,
-                        NULL, NULL, &ahc_echo, &resp,
+                        NULL, NULL, &ahc_echo, response,
 			MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 120,
 			MHD_OPTION_END);
 	if (d == NULL)
@@ -159,9 +161,9 @@ int server_exit(void)
 	{
 		MHD_stop_daemon (d);
 	}
-	if(resp.js_payload)
+	if(response)
 	{
-		free(resp.js_payload);
+		free(response);
 	}
 	if(rbuf)
 	{
