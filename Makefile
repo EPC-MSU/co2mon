@@ -2,8 +2,8 @@ CC=gcc
 CFLAGS=-std=c99
 
 all: co2mon.o main.o server.o ringbuf.o
-	mkdir -p bin
-	$(CC) -o bin/co2mond co2mon.o main.o server.o ringbuf.o -Wl,-rpath=/usr/local/lib -L /usr/local/lib -lhidapi-hidraw -lmicrohttpd
+	mkdir -p build
+	$(CC) -o build/co2mond co2mon.o main.o server.o ringbuf.o -Wl,-rpath=/usr/local/lib -L /usr/local/lib -lhidapi-hidraw -lmicrohttpd
 
 main.o: co2mond/src/main.c
 	$(CC) -c -o main.o co2mond/src/main.c $(CFLAGS)
