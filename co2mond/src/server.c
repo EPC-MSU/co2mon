@@ -1,10 +1,11 @@
-#include "../../microhttpd/include/platform.h"
 #include "../../ringbuf/include/ringbuf.h"
 #include "../include/server.h"
 
 #include <microhttpd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 typedef struct {
 	int value;

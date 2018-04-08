@@ -24,7 +24,7 @@ Install co2mon:
     brew install pkg-config hidapi libmicrohttpd10
 
     # Ubuntu
-    apt-get install g++ pkg-config libhidapi-dev libmicrohttpd10
+    apt-get install g++ pkg-config libhidapi-dev libmicrohttpd-dev
 
     make
     ./bin/co2mond
