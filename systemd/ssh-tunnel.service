@@ -1,0 +1,14 @@
+[Unit]
+Description=Tunnel to an external IP
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/env ssh -N -R 17137:localhost:15137 user@your-domain.com
+KillMode=process
+RestartSec=5
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
+Alias=sshtun

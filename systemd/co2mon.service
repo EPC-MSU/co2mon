@@ -1,0 +1,13 @@
+[Unit]
+Description=CO2 monitor server
+After=sshd.service systemd-udevd.service ntp-wait.service
+ConditionPathExists=/dev/co2
+
+[Service]
+ExecStart=/usr/bin/env /home/pi/co2mon/build/co2mond -P 15137 -b 60000
+KillMode=process
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
