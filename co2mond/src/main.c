@@ -336,7 +336,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
     
-    long int bufsize = 2000;
+    long int bufsize = 20000;
     if (bufsizestring)
     {
         if (!portnumber)
@@ -345,9 +345,9 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
         bufsize = strtol(bufsizestring, NULL, 0);
-        if (bufsize <= 0L || bufsize > 65535)
+        if (bufsize <= 0L || bufsize > 400000)
         {
-            fprintf(stderr, "co2mond: bufsize is out of bounds.\n");
+            fprintf(stderr, "co2mond: bufsize is out of bounds (0, 400000).\n");
             exit(1);
 		}      
     }
