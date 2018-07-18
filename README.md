@@ -61,12 +61,12 @@ To run on a singleboard computer like NanoPi NEO PLUS you should:
     sudo apt-get install ntp
     # Set the rules for automatic startup with systemd
     sudo cp ./systemd/ntp-wait.service /etc/systemd/system/
-    systemctl enable ntp-wait
+    sudo systemctl enable ntp-wait
     sudo cp ./systemd/co2mon.service /etc/systemd/system/
-    systemctl enable co2mon
+    sudo systemctl enable co2mon
     
 You can reboot now and have co2mon service start up automatically and be available on port 15137 (http://localhost:15137)
-If you are bihind a NAT server like a router then you most probably can't access your device from the internet. You will have either use port forwarding on router, or use a tunnel to another server under your control. SSH can be used:
+If you are behind a NAT server like a router then you most probably can't access your device from the internet. You will have either use port forwarding on router, or use a tunnel to another server under your control. SSH can be used:
 
     # If you own a server with DNS name domain.com and want your device be accessable with port 17137 (GatewayPorts must be enabled in sshd config file on the your-domain.com)
     ssh -N -R 17137:localhost:15137 user@your-domain.com
