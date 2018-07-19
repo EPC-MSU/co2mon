@@ -7,7 +7,7 @@ Wants=time-sync.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/sbin/ntp-wait
+ExecStart=/bin/sh -c 'while ! /usr/sbin/ntp-wait; do sleep 1; done'
 RemainAfterExit=yes
 
 [Install]
