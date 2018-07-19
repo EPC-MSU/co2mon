@@ -75,7 +75,9 @@ To avoid asking for a password you need to use generate public-private keys pair
 
     # Set the rules for automatic ssh tunnel startup with systemd
     sudo cp ./systemd/ssh-tunnel.service /etc/systemd/system/
-    systemctl enable ssh-tunnel
+    sudo systemctl enable ssh-tunnel
+    # Check that it is working with either reboot or
+    sudo systemctl start ssh-tunnel
 
 ## See also
 
