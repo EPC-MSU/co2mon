@@ -37,9 +37,6 @@ Install co2mon:
     
 If that helped, you should set the rules with a udev rule
     
-    # make file accessible only by root
-    sudo chown root ./udevrules/99-co2mon.rules
-    sudo chmod 600 ./udevrules/99-co2mon.rules
     # set the rule
     sudo cp ./udevrules/99-co2mon.rules /etc/udev/rules.d/
     # Manually trigger udev (not required usually)
@@ -71,7 +68,12 @@ If you are behind a NAT server like a router then you most probably can't access
     # If you own a server with DNS name domain.com and want your device be accessable with port 17137 (GatewayPorts must be enabled in sshd config file on the your-domain.com)
     ssh -N -R 17137:localhost:15137 user@your-domain.com
 
-To avoid asking for a password you need to use generate public-private keys pair and upload your public key on the your-domain.com with this manual http://www.linuxproblem.org/art_9.html. You can make ssh tunnel start automatically. Just be sure that ssh do not ask a password on connect and your device is accessible with http://your-domain.com:17137. Then edit ./systemd/ssh-tunnel.service to set it on your domain etc. Then:
+To avoid asking for a password you need to use generate public-private keys pair and upload your public key on the your-domain.com with this manual http://www.linuxproblem.org/art_9.html. You can make ssh tunnel start automatically on boot. You would have to create key pair using the same manual but with sudo, because systemd runs under root and the key pair must belong to root. Check that ssh do not ask a password on connect with
+
+    # Run that to see that no password is asked and no dialog is initiated
+    sudo ssh -N -R 17137:localhost:15137 user@your-domain.com
+
+and your device is accessible with http://your-domain.com:17137. Then edit ./systemd/ssh-tunnel.service to set it on your domain etc. Then:
 
     # Set the rules for automatic ssh tunnel startup with systemd
     sudo cp ./systemd/ssh-tunnel.service /etc/systemd/system/
