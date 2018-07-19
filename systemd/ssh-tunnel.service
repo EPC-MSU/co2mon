@@ -5,7 +5,7 @@ After=network.target
 [Service]
 ExecStart=/usr/bin/env ssh -N -R 17137:localhost:15137 user@your-domain.com
 KillMode=process
-RestartSec=5
+RestartSec=30
 Restart=always
 Type=simple
 
