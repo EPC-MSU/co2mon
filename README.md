@@ -43,8 +43,8 @@ If that helped, you should set the rules with a udev rule
     # set the rule
     sudo cp ./udevrules/99-co2mon.rules /etc/udev/rules.d/
     # Manually trigger udev (not required usually)
-    udevadm control --reload-rules
-    udevadm trigger
+    sudo udevadm control --reload-rules
+    sudo udevadm trigger
 
 ### Webserver
 
