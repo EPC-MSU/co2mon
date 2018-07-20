@@ -3,7 +3,7 @@ Description=Tunnel to an external IP
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/env ssh -N -R 17137:localhost:15137 user@your-domain.com
+ExecStart=/usr/bin/env ssh -o ExitOnForwardFailure=yes -N -R 17137:localhost:15137 zap@kea.su
 KillMode=process
 RestartSec=30
 Restart=always
