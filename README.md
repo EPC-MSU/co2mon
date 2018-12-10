@@ -24,7 +24,7 @@ Install co2mon:
     brew install pkg-config hidapi libmicrohttpd10
 
     # Ubuntu
-    apt-get install g++ pkg-config libhidapi-dev libmicrohttpd-dev
+    sudo apt-get install g++ pkg-config libhidapi-dev libmicrohttpd-dev
 
     make
     ./build/co2mond    
@@ -50,7 +50,7 @@ If that helped, you should set the rules with a udev rule
     
 Connect ro the webserver with http://localhost:portnumber
 
-To run on a singleboard computer like NanoPi NEO PLUS you should:
+To run on a singleboard computer like NanoPi NEO PLUS you should (co2mond must be located in /home/pi/co2mon/build/co2mond):
     
     # Set the timezone
     sudo dpkg-reconfigure tzdata
@@ -62,7 +62,10 @@ To run on a singleboard computer like NanoPi NEO PLUS you should:
     sudo cp ./systemd/co2mon.service /etc/systemd/system/
     sudo systemctl enable co2mon
     
-You can reboot now and have co2mon service start up automatically and be available on port 15137 (http://localhost:15137)
+You can reboot now and have co2mon service start up automatically and be available on port 15137 (http://localhost:15137). If it is not working, you can check the running service status with:
+
+    systemctl status co2mon
+    
 If you are behind a NAT server like a router then you most probably can't access your device from the internet. You will have either use port forwarding on router, or use a tunnel to another server under your control. SSH can be used:
 
     # If you own a server with DNS name domain.com and want your device be accessable with port 17137 (GatewayPorts must be enabled in sshd config file on the your-domain.com)
