@@ -76,7 +76,7 @@ To avoid asking for a password you need to use generate public-private keys pair
     # Create key pair for root interactively
     sudo ssh-keygen -t rsa
     ssh user@your-domain.com mkdir -p .ssh
-    cat /root/.ssh/id_rsa.pub | ssh user@your-domain.com 'cat >> .ssh/authorized_keys'
+    sudo cat /root/.ssh/id_rsa.pub | ssh user@your-domain.com 'cat >> .ssh/authorized_keys'
     # Run that to see that no password is asked and no dialog is initiated (except first time)
     sudo ssh -N -R 17137:localhost:15137 user@your-domain.com
 
