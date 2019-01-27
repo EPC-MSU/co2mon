@@ -88,6 +88,19 @@ Your device must be accessible with http://your-domain.com:17137. Then edit ./sy
     # Check that it is working with either reboot or
     sudo systemctl start ssh-tunnel
 
+## Development with vagrant
+
+You can develop co2mon in clean environment if you are familiar with vagrant. It manages virtual machines and synchronize project files with your host machine.
+    # Install vagrant
+    sudo apt install vagrant
+    # Inside co2mon directory run the following to download and setup the vm
+    sudo vagrant up
+    sudo vagrant ssh
+    # You are be inside vm now (press Ctrl-D to exit)
+    cd /vagrant
+    make
+    # Build should complete without errors
+
 ## See also
 
   * [ZyAura ZG01C Module Manual](http://www.zyaura.com/support/manual/pdf/ZyAura_CO2_Monitor_ZG01C_Module_ApplicationNote_141120.pdf)
